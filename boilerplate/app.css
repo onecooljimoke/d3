@@ -1,0 +1,13 @@
+.edge {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+.node {
+    fill: #49BA3F;
+}
+
+.hide {
+    display: none;
+}

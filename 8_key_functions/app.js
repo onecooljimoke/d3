@@ -1,8 +1,33 @@
-// chp 9 removing elements
+// chp 9 Key functions
 var body = d3.select("body");
 
-var chartDataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
-                     11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+var chartDataset = [
+  { key: 0, value: 5 },
+  { key: 1, value: 10 },
+  { key: 2, value: 13 },
+  { key: 3, value: 19 },
+  { key: 4, value: 21 },
+  { key: 5, value: 25 },
+  { key: 6, value: 22 },
+  { key: 7, value: 18 },
+  { key: 8, value: 15 },
+  { key: 9, value: 13 },
+  { key: 10, value: 11 },
+  { key: 11, value: 12 },
+  { key: 12, value: 15 },
+  { key: 13, value: 20 },
+  { key: 14, value: 18 },
+  { key: 15, value: 17 },
+  { key: 16, value: 16 },
+  { key: 17, value: 18 },
+  { key: 18, value: 23 },
+  { key: 19, value: 25 }
+];
+
+// define key function
+function keyFunc(d) {
+  return d.key;
+}
 
 var chartHeight = 200,
     chartWidth  = 600,
@@ -20,7 +45,7 @@ var xScale = d3.scale.ordinal()
     .rangeRoundBands([0, chartWidth], 0.05);
 
 var yScale = d3.scale.linear()
-    .domain([0, d3.max(chartDataset, function(d) {return d;})])
+    .domain([0, d3.max(chartDataset, function(d) {return d.value;})])
     .range([0, chartHeight - 30]);
 
 var xStart = function(d, i){
@@ -28,7 +53,7 @@ var xStart = function(d, i){
 };
 
 var yStart = function(d, i){
-  return chartHeight - yScale(d);
+  return chartHeight - yScale(d.value);
 };
 
 var barWidth = function(d, i){
@@ -36,11 +61,11 @@ var barWidth = function(d, i){
 };
 
 var barHeight = function(d, i){
-  return yScale(d);
+  return yScale(d.value);
 };
 
 chartSvg.selectAll("rect")
-  .data(chartDataset)
+  .data(chartDataset, keyFunc)
   .enter()
   .append("rect")
 // pass an object to .attr to set multiple values
@@ -62,10 +87,10 @@ var yLabel = function(d,i){
 };
 
 chartSvg.selectAll("text")
-  .data(chartDataset)
+  .data(chartDataset, keyFunc)
   .enter()
   .append("text")
-  .text(function(d,i){return d;})
+  .text(function(d,i){return d.value;})
   .attr({
     x: xLabel,
     y: yLabel,
@@ -74,7 +99,7 @@ chartSvg.selectAll("text")
   .attr("font-family", "sans-serif")
   .attr("text-anchor", "middle");
 
-// Chp 9 Adding elements
+// Chp 9
 d3.select("p")
   .on("click", function() {
 
@@ -83,7 +108,7 @@ d3.select("p")
 
     // select all the rectangles
     var bars = chartSvg.selectAll('rect')
-        .data(chartDataset);
+        .data(chartDataset, keyFunc);
 
     // update the xScale
     xScale.domain(d3.range(chartDataset.length));
@@ -93,7 +118,7 @@ d3.select("p")
       .transition()
       .duration(500)
     // transition the element to the right
-      .attr("x", chartWidth)
+      .attr("x", -xScale.rangeBand())
     // remove the element from the dom
       .remove();
 
@@ -111,19 +136,19 @@ d3.select("p")
 
     // select all the labels
     var labels = chartSvg.selectAll('text')
-        .data(chartDataset);
+        .data(chartDataset, keyFunc);
 
     // remove the label
     labels.exit()
       .transition()
       .duration(500)
-      .attr("x", chartWidth)
+      .attr("x", -xScale.rangeBand())
       .remove();
 
-    // update the labels 
+    // update the labels
     labels.transition()
       .duration(500)
-      .text(function(d,i){return d;})
+      .text(function(d,i){return d.value;})
       .attr({
         x: xLabel,
         y: yLabel,

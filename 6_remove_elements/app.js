@@ -74,7 +74,7 @@ chartSvg.selectAll("text")
   .attr("font-family", "sans-serif")
   .attr("text-anchor", "middle");
 
-// Chp 9 Adding elements
+// Chp 9 Removing elements
 d3.select("p")
   .on("click", function() {
 
