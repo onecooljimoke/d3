@@ -111,3 +111,13 @@ svg.selectAll("circle")
      class: "node"
    });
 
+// select a node
+svg.selectAll("circle")
+   .on("click", function(d) { 
+     d.unicorn = "smiley";
+     var nodes = tree(d);
+     var links = tree.links(nodes);
+     console.log(nodes);
+     console.log(links);
+});
+
