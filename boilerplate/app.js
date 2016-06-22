@@ -2,7 +2,12 @@
 
 var svgWidth = 1200,
     svgHeight = 600,
-    padding = 40,
+    margin = {
+      left: 80,
+      right: 40,
+      top: 40,
+      bottom: 40
+    },
     nodeRadius = 25;
 
 var treeCache = {};
@@ -39,6 +44,21 @@ var treeData = {
   ]
 };
 
+// define a key function
+function keyFunc(d) {
+  return d.name;
+}
+
+function clickFunc(d) {
+  if(d.hasOwnProperty("children")) {
+    collapseNode(d);
+  } else {
+    if(treeCache.hasOwnProperty(d.name)){
+      expandNode(d);
+    }
+  }
+}
+
 
 // Scales
 // default tree layout computes x and y values on scale of 0 to 1
@@ -46,12 +66,12 @@ var treeData = {
 var xScale = d3.scale
     .linear()
     .domain([0, 1])
-    .range([padding * 2, svgWidth - padding]);
+    .range([margin.left, svgWidth - margin.right]);
 
 var yScale = d3.scale
     .linear()
     .domain([0, 1])
-    .range([padding, svgHeight - padding]);
+    .range([margin.top, svgHeight - margin.bottom]);
 
 // Determine x and y positions
 // flip the usage of d.x and d.y so the tree goes from right to left
@@ -70,7 +90,6 @@ function projectionFunc(d) {
 
 // remove nodes and update view
 function collapseNode(d) {
-  console.log(d.name + " clicked");
   treeCache[d.name] = d.children;
   d.children = null;
   var n = tree(treeData);
@@ -95,7 +114,7 @@ function collapseNode(d) {
     });
 
   // update nodes
-  var circles = svg.selectAll("circle").data(n);
+  var circles = svg.selectAll("circle").data(n, keyFunc);
 
   circles.exit()
     .transition()
@@ -116,7 +135,7 @@ function collapseNode(d) {
 function expandNode(d) {
   // pull children from cache and clear cache entry
   d.children = treeCache[d.name];
-  treeCache[d.name] = null;
+  delete treeCache[d.name]
 
   var n = tree(treeData);
   var l = tree.links(n);
@@ -153,7 +172,7 @@ function expandNode(d) {
       cy: yPosition,
       r: nodeRadius,
       class: "node"
-    });
+    })
 
   circles.transition()
     .duration(500)
@@ -163,10 +182,13 @@ function expandNode(d) {
       r: nodeRadius,
       class: "node"
     });
+  
+  circles.on("click", clickFunc);
 
 
 }
 
+/** Initialize screen at start **/
 // Add svg to the screen
 var svg = d3.select("#display")
     .append("svg")
@@ -202,7 +224,7 @@ svg.selectAll("path")
 
 // draw the nodes
 svg.selectAll("circle")
-  .data(nodes)
+  .data(nodes, keyFunc)
   .enter()
   .append("circle")
   .attr({
@@ -214,12 +236,4 @@ svg.selectAll("circle")
 
 // select a node
 svg.selectAll("circle")
-  .on("click", function(d) {
-    if(d.hasOwnProperty("children")) {
-      collapseNode(d);
-    } else {
-      if(treeCache.hasOwnProperty(d.name)){
-        expandNode(d);
-      }
-    }
-  });
+  .on("click", clickFunc);
