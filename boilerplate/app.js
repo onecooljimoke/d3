@@ -263,22 +263,18 @@ var diagonal = d3.svg.diagonal()
 
 // draw the nodes
 function activate() {
-  var node = svg.selectAll("g")
+  var node = svg.selectAll("g.node")
       .data(nodes, keyFunc);
 
   var nodeEnter = node.enter()
       .append("g")
+      .attr("class", "node")
       .attr("transform", function(d){return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
       .on("click", clickFunc);
 
 
   nodeEnter.append("circle")
-    .attr({
-      // cx: xPosition,
-      // cy: yPosition,
-      r: nodeRadius,
-      class: "node"
-    });
+    .attr("r", nodeRadius);
 
   // draw the links
   svg.selectAll("path")

@@ -5,8 +5,13 @@
 }
 
 .node {
-    fill: cornflowerblue;
     cursor: pointer;
+}
+
+.node circle {
+    fill: cornflowerblue;
+    stroke: gray;
+    stroke-width: 1.5px;
 }
 
 .hide {
