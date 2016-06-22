@@ -94,6 +94,12 @@ function collapseNode(d) {
   d.children = null;
   var n = tree(treeData);
   var l = tree.links(n);
+  var nodeSource = {x: xPosition(d), y: yPosition(d)};
+  // use this diagonal to collapse the line
+  var exitDiagonal = d3.svg.diagonal()
+      .projection(projectionFunc)
+      .source(nodeSource)
+      .target(nodeSource);
 
   var lines = svg.selectAll("path").data(l);
 
@@ -101,6 +107,7 @@ function collapseNode(d) {
   lines.exit()
     .transition()
     .duration(500)
+    .attr("d", exitDiagonal)
     .remove();
 
   lines.transition()
@@ -119,6 +126,10 @@ function collapseNode(d) {
   circles.exit()
     .transition()
     .duration(500)
+    .attr({
+      cx: xPosition(d),
+      cy: yPosition(d),
+    })
     .remove();
 
   circles.transition()
@@ -140,12 +151,21 @@ function expandNode(d) {
   var n = tree(treeData);
   var l = tree.links(n);
 
+  var nodeSource = {x: xPosition(d), y: yPosition(d)};
+  // use this diagonal to collapse the line
+  var enterDiagonal = d3.svg.diagonal()
+      .projection(projectionFunc)
+      .source(nodeSource)
+      .target(nodeSource);
+
+
   var lines = svg.selectAll("path").data(l);
   var circles = svg.selectAll("circle").data(n);
 
   // add new links
   lines.enter()
     .append("path")
+    .attr("d", enterDiagonal)
     .transition()
     .duration(500)
     .attr({
@@ -165,6 +185,10 @@ function expandNode(d) {
   // add new nodes
   circles.enter()
     .append("circle")
+    .attr({
+      cx: xPosition(d),
+      cy: yPosition(d)
+    })
     .transition()
     .duration(500)
     .attr({
@@ -182,7 +206,7 @@ function expandNode(d) {
       r: nodeRadius,
       class: "node"
     });
-  
+
   circles.on("click", clickFunc);
 
 
