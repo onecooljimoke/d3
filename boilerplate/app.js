@@ -108,21 +108,21 @@ function projectionFunc(d) {
 }
 
 function sourceFunc(d) {
-  console.log(d); 
+  console.log(d);
   return {x: bezierXSource(d.source), y: bezierYSource(d.source)};
 }
 
-function targetFunc(d) { 
+function targetFunc(d) {
   return {x: bezierXTarget(d.target), y: bezierYTarget(d.target)};
 }
 
 // remove nodes and update view
-function collapseNode(d) {
-  treeCache[d.name] = d.children;
-  d.children = null;
+function collapseNode(source) {
+  treeCache[source.name] = source.children;
+  source.children = null;
   var n = tree(treeData);
   var l = tree.links(n);
-  var nodeSource = {x: xPosition(d), y: yPosition(d)};
+  var nodeSource = {x: xPosition(source), y: yPosition(source)};
   // use this diagonal to collapse the line
   var exitDiagonal = d3.svg.diagonal()
       .projection(projectionFunc)
@@ -149,25 +149,24 @@ function collapseNode(d) {
     });
 
   // update nodes
-  var circles = svg.selectAll("circle").data(n, keyFunc);
+  var node = svg.selectAll("g")
+      .data(n, keyFunc);
+  
+  var nodeExit = node.exit()
+      .transition()
+      .duration(500)
+      .attr("transform",  "translate(" + nodeSource.x + "," + nodeSource.y + ")")
+      .remove(); 
 
-  circles.exit()
-    .transition()
-    .duration(500)
-    .attr({
-      cx: xPosition(d),
-      cy: yPosition(d),
-      r: 0.001
-    })
-    .remove();
+  nodeExit.selectAll("circle")
+     .attr("r", 0.001);
 
-  circles.transition()
+  node.transition()
     .duration(500)
-    .attr({
-      cx: xPosition,
-      cy: yPosition,
-      r: nodeRadius,
-    })
+    .attr("transform", function(d) {return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
+  
+  node.selectAll("circle")
+    .attr("r", nodeRadius);
 }
 
 // add nodes and update
@@ -258,34 +257,41 @@ var links = tree.links(nodes);
 // the diagonal projection function interprets the x and y coordinates
 // need to use a custom projection function so the path's render correctly
 var diagonal = d3.svg.diagonal()
-                     .projection(projectionFunc)
-                     .source(sourceFunc)
-                     .target(targetFunc);
+    .projection(projectionFunc)
+    .source(sourceFunc)
+    .target(targetFunc);
+
 // draw the nodes
-svg.selectAll("circle")
-  .data(nodes, keyFunc)
-  .enter()
-  .append("circle")
-  .attr({
-    cx: xPosition,
-    cy: yPosition,
-    r: nodeRadius,
-    class: "node"
-  });
+function activate() {
+  var node = svg.selectAll("g")
+      .data(nodes, keyFunc);
 
-// draw the links
-svg.selectAll("path")
-  .data(links, function(d) {return d.target.id;})
-  .enter()
-  .append("path")
-  .attr({
-    d: diagonal,
-    // need to set the stroke and stroke width to insure straight lines
-    // appear.  looks like default bezier uses the fill property only to
-    // show lines
-    class: "edge"
-  });
+  var nodeEnter = node.enter()
+      .append("g")
+      .attr("transform", function(d){return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
+      .on("click", clickFunc);
 
-// add click function to nodes 
-svg.selectAll("circle")
-  .on("click", clickFunc);
+
+  nodeEnter.append("circle")
+    .attr({
+      // cx: xPosition,
+      // cy: yPosition,
+      r: nodeRadius,
+      class: "node"
+    });
+
+  // draw the links
+  svg.selectAll("path")
+    .data(links, function(d) {return d.target.id;})
+    .enter()
+    .append("path")
+    .attr({
+      d: diagonal,
+      // need to set the stroke and stroke width to insure straight lines
+      // appear.  looks like default bezier uses the fill property only to
+      // show lines
+      class: "edge"
+    });
+}
+
+activate();
