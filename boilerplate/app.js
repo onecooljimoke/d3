@@ -5,6 +5,8 @@ var svgWidth = 1200,
     padding = 40,
     nodeRadius = 25;
 
+var treeCache = {};
+
 // Our fake dataset
 var treeData = {
   "name": "A",
@@ -13,7 +15,7 @@ var treeData = {
       "name": "B",
       "children": [
         {
-          "name": "D", 
+          "name": "D",
           "children": [
             {
               "name": "H",
@@ -42,14 +44,14 @@ var treeData = {
 // default tree layout computes x and y values on scale of 0 to 1
 // this can be modified if you need to
 var xScale = d3.scale
-               .linear()
-               .domain([0, 1])
-               .range([padding * 2, svgWidth - padding]);
+    .linear()
+    .domain([0, 1])
+    .range([padding * 2, svgWidth - padding]);
 
 var yScale = d3.scale
-               .linear()
-               .domain([0, 1])
-               .range([padding, svgHeight - padding]);
+    .linear()
+    .domain([0, 1])
+    .range([padding, svgHeight - padding]);
 
 // Determine x and y positions
 // flip the usage of d.x and d.y so the tree goes from right to left
@@ -68,11 +70,11 @@ function projectionFunc(d) {
 
 // Add svg to the screen
 var svg = d3.select("#display")
-            .append("svg")
-            .attr({
-              width: svgWidth,
-              height: svgHeight
-            });
+    .append("svg")
+    .attr({
+      width: svgWidth,
+      height: svgHeight
+    });
 
 // Build a tree
 var tree = d3.layout.tree(treeData);
@@ -88,36 +90,69 @@ var links = tree.links(nodes);
 var diagonal = d3.svg.diagonal().projection(projectionFunc);
 
 svg.selectAll("path")
-   .data(links)
-   .enter()
-   .append("path")
-   .attr({
-     d: diagonal,
-     // need to set the stroke and stroke width to insure straight lines
-     // appear.  looks like default bezier uses the fill property only to 
-     // show lines
-     class: "edge"
-   });
+  .data(links)
+  .enter()
+  .append("path")
+  .attr({
+    d: diagonal,
+    // need to set the stroke and stroke width to insure straight lines
+    // appear.  looks like default bezier uses the fill property only to
+    // show lines
+    class: "edge"
+  });
 
 // draw the nodes
 svg.selectAll("circle")
-   .data(nodes)
-   .enter()
-   .append("circle")
-   .attr({
-     cx: xPosition,
-     cy: yPosition,
-     r: nodeRadius,
-     class: "node"
-   });
+  .data(nodes)
+  .enter()
+  .append("circle")
+  .attr({
+    cx: xPosition,
+    cy: yPosition,
+    r: nodeRadius,
+    class: "node"
+  });
 
 // select a node
 svg.selectAll("circle")
-   .on("click", function(d) { 
-     d.unicorn = "smiley";
-     var nodes = tree(d);
-     var links = tree.links(nodes);
-     console.log(nodes);
-     console.log(links);
-});
+  .on("click", function(d) {
+    console.log(d.name + " clicked");
+    treeCache[d.name] = d.children;
+    d.children = null;
+    var n = tree(treeData);
+    var l = tree.links(n);
 
+    var lines = svg.selectAll("path").data(l);
+
+    // update links
+    lines.exit()
+      .transition()
+      .duration(500)
+      .remove();
+
+    lines.transition()
+      .duration(500)
+      .attr({
+        d: diagonal,
+        // need to set the stroke and stroke width to insure straight lines
+        // appear.  looks like default bezier uses the fill property only to
+        // show lines
+        class: "edge"
+      });
+
+    // update nodes
+    var circles = svg.selectAll("circle").data(n);
+
+    circles.exit()
+      .transition()
+      .duration(500)
+      .remove();
+
+    circles.transition()
+      .duration(500)
+      .attr({
+        cx: xPosition,
+        cy: yPosition,
+        r: nodeRadius,
+      })
+  });
