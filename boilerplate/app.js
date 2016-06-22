@@ -68,6 +68,105 @@ function projectionFunc(d) {
   return [xScale(d.y), yScale(d.x)];
 }
 
+// remove nodes and update view
+function collapseNode(d) {
+  console.log(d.name + " clicked");
+  treeCache[d.name] = d.children;
+  d.children = null;
+  var n = tree(treeData);
+  var l = tree.links(n);
+
+  var lines = svg.selectAll("path").data(l);
+
+  // update links
+  lines.exit()
+    .transition()
+    .duration(500)
+    .remove();
+
+  lines.transition()
+    .duration(500)
+    .attr({
+      d: diagonal,
+      // need to set the stroke and stroke width to insure straight lines
+      // appear.  looks like default bezier uses the fill property only to
+      // show lines
+      class: "edge"
+    });
+
+  // update nodes
+  var circles = svg.selectAll("circle").data(n);
+
+  circles.exit()
+    .transition()
+    .duration(500)
+    .remove();
+
+  circles.transition()
+    .duration(500)
+    .attr({
+      cx: xPosition,
+      cy: yPosition,
+      r: nodeRadius,
+    })
+}
+
+// add nodes and update
+// assumes that there are children of the node in the tree cache
+function expandNode(d) {
+  // pull children from cache and clear cache entry
+  d.children = treeCache[d.name];
+  treeCache[d.name] = null;
+
+  var n = tree(treeData);
+  var l = tree.links(n);
+
+  var lines = svg.selectAll("path").data(l);
+  var circles = svg.selectAll("circle").data(n);
+
+  // add new links
+  lines.enter()
+    .append("path")
+    .transition()
+    .duration(500)
+    .attr({
+      d: diagonal,
+      class: "edge"
+    });
+
+  // update links
+  lines.transition()
+    .duration(500)
+    .attr({
+      d: diagonal,
+      class: "edge"
+    });
+
+
+  // add new nodes
+  circles.enter()
+    .append("circle")
+    .transition()
+    .duration(500)
+    .attr({
+      cx: xPosition,
+      cy: yPosition,
+      r: nodeRadius,
+      class: "node"
+    });
+
+  circles.transition()
+    .duration(500)
+    .attr({
+      cx: xPosition,
+      cy: yPosition,
+      r: nodeRadius,
+      class: "node"
+    });
+
+
+}
+
 // Add svg to the screen
 var svg = d3.select("#display")
     .append("svg")
@@ -116,43 +215,11 @@ svg.selectAll("circle")
 // select a node
 svg.selectAll("circle")
   .on("click", function(d) {
-    console.log(d.name + " clicked");
-    treeCache[d.name] = d.children;
-    d.children = null;
-    var n = tree(treeData);
-    var l = tree.links(n);
-
-    var lines = svg.selectAll("path").data(l);
-
-    // update links
-    lines.exit()
-      .transition()
-      .duration(500)
-      .remove();
-
-    lines.transition()
-      .duration(500)
-      .attr({
-        d: diagonal,
-        // need to set the stroke and stroke width to insure straight lines
-        // appear.  looks like default bezier uses the fill property only to
-        // show lines
-        class: "edge"
-      });
-
-    // update nodes
-    var circles = svg.selectAll("circle").data(n);
-
-    circles.exit()
-      .transition()
-      .duration(500)
-      .remove();
-
-    circles.transition()
-      .duration(500)
-      .attr({
-        cx: xPosition,
-        cy: yPosition,
-        r: nodeRadius,
-      })
+    if(d.hasOwnProperty("children")) {
+      collapseNode(d);
+    } else {
+      if(treeCache.hasOwnProperty(d.name)){
+        expandNode(d);
+      }
+    }
   });
