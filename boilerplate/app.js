@@ -157,6 +157,7 @@ function collapseNode(d) {
     .attr({
       cx: xPosition(d),
       cy: yPosition(d),
+      r: 0.001
     })
     .remove();
 
@@ -209,14 +210,10 @@ function expandNode(d) {
       class: "edge"
     });
 
-
   // add new nodes
   circles.enter()
     .append("circle")
-    .attr({
-      cx: xPosition(d),
-      cy: yPosition(d)
-    })
+    .attr("r", 0.001)
     .transition()
     .duration(500)
     .attr({
