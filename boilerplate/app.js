@@ -8,7 +8,8 @@ var svgWidth = 1200,
       top: 40,
       bottom: 40
     },
-    nodeRadius = 25;
+    nodeRadius = 25,
+    i = 0;
 
 var treeCache = {};
 
@@ -46,7 +47,7 @@ var treeData = {
 
 // define a key function
 function keyFunc(d) {
-  return d.name;
+  return d.id || (d.id = ++i);
 }
 
 function clickFunc(d) {
@@ -84,8 +85,35 @@ function yPosition(d, i) {
   return yScale(d.x);
 }
 
+function bezierXSource(d){
+  return d.x;
+}
+
+function bezierYSource(d){
+  var yPos = xPosition(d) + nodeRadius;
+  return xScale.invert(yPos);
+}
+
+function bezierXTarget(d){
+  return d.x;
+}
+
+function bezierYTarget(d){
+  var yPos = xPosition(d) - nodeRadius;
+  return xScale.invert(yPos);
+}
+
 function projectionFunc(d) {
   return [xScale(d.y), yScale(d.x)];
+}
+
+function sourceFunc(d) {
+  console.log(d); 
+  return {x: bezierXSource(d.source), y: bezierYSource(d.source)};
+}
+
+function targetFunc(d) { 
+  return {x: bezierXTarget(d.target), y: bezierYTarget(d.target)};
 }
 
 // remove nodes and update view
@@ -159,8 +187,8 @@ function expandNode(d) {
       .target(nodeSource);
 
 
-  var lines = svg.selectAll("path").data(l);
-  var circles = svg.selectAll("circle").data(n);
+  var lines = svg.selectAll("path").data(l, function(d){return d.target.id;});
+  var circles = svg.selectAll("circle").data(n, keyFunc);
 
   // add new links
   lines.enter()
@@ -232,20 +260,10 @@ var links = tree.links(nodes);
 
 // the diagonal projection function interprets the x and y coordinates
 // need to use a custom projection function so the path's render correctly
-var diagonal = d3.svg.diagonal().projection(projectionFunc);
-
-svg.selectAll("path")
-  .data(links)
-  .enter()
-  .append("path")
-  .attr({
-    d: diagonal,
-    // need to set the stroke and stroke width to insure straight lines
-    // appear.  looks like default bezier uses the fill property only to
-    // show lines
-    class: "edge"
-  });
-
+var diagonal = d3.svg.diagonal()
+                     .projection(projectionFunc)
+                     .source(sourceFunc)
+                     .target(targetFunc);
 // draw the nodes
 svg.selectAll("circle")
   .data(nodes, keyFunc)
@@ -258,6 +276,19 @@ svg.selectAll("circle")
     class: "node"
   });
 
-// select a node
+// draw the links
+svg.selectAll("path")
+  .data(links, function(d) {return d.target.id;})
+  .enter()
+  .append("path")
+  .attr({
+    d: diagonal,
+    // need to set the stroke and stroke width to insure straight lines
+    // appear.  looks like default bezier uses the fill property only to
+    // show lines
+    class: "edge"
+  });
+
+// add click function to nodes 
 svg.selectAll("circle")
   .on("click", clickFunc);
