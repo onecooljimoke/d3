@@ -22,3 +22,15 @@
     font: 10px sans-serif;
     text-anchor: middle;
 }
+
+.node circle.testsuite {
+    fill: green;
+}
+
+.node circle.module {
+    fill: black;
+}
+
+.node circle.test{
+    fill: yellow;
+}

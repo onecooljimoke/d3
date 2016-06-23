@@ -8,34 +8,53 @@ var svgWidth = 1200,
       top: 40,
       bottom: 40
     },
-    nodeRadius = 25,
+    nodeRadius = 10,
+    labelY = 20
     i = 0,
     duration = 500;
 
 var treeCache = {
   "B": [
-    {"name": "D"},
-    {"name": "E"}
+    {"name": "E", "type": "module"},
+    {"name": "F", "type": "module"}
   ],
   "C": [
-    {"name": "F"},
-    {"name": "G"}
+    {"name": "G", "type": "module"},
+    {"name": "H", "type": "module"},
+    {"name": "I", "type": "module"}
   ],
   "D": [
-    {"name": "H"}
+    {"name": "J", "type": "module"}
+  ],
+  "E": [
+    {"name": "K", "type": "test"},
+  ],
+  "F": [
+    {"name": "L", "type": "test"},
+  ],
+  "G": [
+    {"name": "M", "type": "test"},
   ],
   "H": [
-    {"name": "I"},
-    {"name": "J"}
-  ]
+    {"name": "N", "type": "test"},
+  ],
+  "I": [
+    {"name": "O", "type": "test"},
+  ],
+  "J": [
+    {"name": "P", "type": "test"},
+  ],
+
 };
 
 // Our fake dataset
 var treeData = {
   "name": "A",
+  "type": "root",
   "children": [
-    {"name": "B"},
-    {"name": "C"}
+    {"name": "B", "type": "testsuite"},
+    {"name": "C", "type": "testsuite"},
+    {"name": "D", "type": "testsuite"}
   ]
 };
 
@@ -77,6 +96,10 @@ function clickFunc(d) {
       expandNode(d);
     }
   }
+}
+
+function circleClassFunc(d) {
+  return d.type;
 }
 
 
@@ -232,9 +255,10 @@ function expandNode(source) {
 
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
+    .attr("class", circleClassFunc);
   
   nodeEnter.append("text")
-    .attr("y", 40)
+    .attr("y", labelY)
     .text(function(d) {return d.name;});
 
 
@@ -277,10 +301,11 @@ function activate() {
 
 
   nodeEnter.append("circle")
-    .attr("r", nodeRadius);
+    .attr("r", nodeRadius)
+    .attr("class", circleClassFunc);
   
   nodeEnter.append("text")
-    .attr("y", 40)
+    .attr("y", labelY)
     .text(function(d) {return d.name;});
 
   // draw the links
