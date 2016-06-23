@@ -34,3 +34,11 @@
 .node circle.test{
     fill: yellow;
 }
+
+p.label {
+    font: 10px Century Gothic;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

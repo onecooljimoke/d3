@@ -9,7 +9,9 @@ var svgWidth = 1200,
       bottom: 40
     },
     nodeRadius = 10,
-    labelY = 20
+    labelWidth = 100,
+    labelHeight = 20,
+    labelY = 5,
     i = 0,
     duration = 500;
 
@@ -256,7 +258,7 @@ function expandNode(source) {
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
     .attr("class", circleClassFunc);
-  
+
   nodeEnter.append("text")
     .attr("y", labelY)
     .text(function(d) {return d.name;});
@@ -288,7 +290,7 @@ function activate() {
   var nodes = tree(treeData);
   var links = tree.links(nodes);
 
-  // draw the nodes 
+  // draw the nodes
 
   var node = svg.selectAll("g.node")
       .data(nodes, nodeKeyFunc);
@@ -303,18 +305,22 @@ function activate() {
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
     .attr("class", circleClassFunc);
-  
-  nodeEnter.append("text")
-    .attr("y", labelY)
-    .text(function(d) {return d.name;});
 
-nodeEnter.append("foreignObject")
-    .attr("width", 100)
-    .attr("height", 20)
+  //  nodeEnter.append("text")
+  //    .attr("y", labelY)
+  //    .text(function(d) {return d.name;});
+
+  nodeEnter.append("foreignObject")
+    .attr("width", labelWidth)
+    .attr("height", labelHeight)
     .attr("y", labelY)
-  .append("xhtml:body")
-    .style("font", "10px 'Helvetica Neue'")
-    .html("<p>Hello I'm falling off the screen</p>");
+    .attr("x", function(d) {
+      return (- labelWidth / 2);
+    })
+    .append("xhtml:body")
+    .html(function(d) {
+      return "<p class='label'>" + d.name + "</p>";
+    });
 
 
   // draw the links
