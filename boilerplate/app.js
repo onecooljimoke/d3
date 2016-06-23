@@ -9,7 +9,8 @@ var svgWidth = 1200,
       bottom: 40
     },
     nodeRadius = 25,
-    i = 0;
+    i = 0,
+    duration = 500;
 
 var treeCache = {};
 
@@ -111,7 +112,7 @@ function yPosition(d, i) {
 }
 
 // bezier functions return a value between 0 and 1
-// which corresponds to the x and y positions calculated by 
+// which corresponds to the x and y positions calculated by
 // the tree layout
 // these functions used for calculating the paths
 function bezierXSource(d){
@@ -148,10 +149,13 @@ function targetFunc(d) {
 function collapseNode(source) {
   treeCache[source.name] = source.children;
   source.children = null;
+
+  // calling tree updates the x,y values of all nodes
+  // this actually changes the x.y values of source
   var n = tree(treeData);
   var l = tree.links(n);
-  
-  // save current position of source node
+
+  // save the new position of the source 
   var nodeSource = {x: xPosition(source), y: yPosition(source)};
 
   // use this diagonal to collapse the line
@@ -165,12 +169,12 @@ function collapseNode(source) {
   // update links
   lines.exit()
     .transition()
-    .duration(500)
+    .duration(duration)
     .attr("d", exitDiagonal)
     .remove();
 
   lines.transition()
-    .duration(500)
+    .duration(duration)
     .attr({
       d: diagonal,
       // need to set the stroke and stroke width to insure straight lines
@@ -185,7 +189,7 @@ function collapseNode(source) {
 
   var nodeExit = node.exit()
       .transition()
-      .duration(500)
+      .duration(duration)
       .attr("transform",  "translate(" + nodeSource.x + "," + nodeSource.y + ")")
       .remove();
 
@@ -193,7 +197,7 @@ function collapseNode(source) {
     .attr("r", 0.001);
 
   node.transition()
-    .duration(500)
+    .duration(duration)
     .attr("transform", function(d) {return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
 
   node.selectAll("circle")
@@ -202,67 +206,57 @@ function collapseNode(source) {
 
 // add nodes and update
 // assumes that there are children of the node in the tree cache
-function expandNode(d) {
+function expandNode(source) {
   // pull children from cache and clear cache entry
-  d.children = treeCache[d.name];
-  delete treeCache[d.name]
+  source.children = treeCache[source.name];
+  delete treeCache[source.name]
+
+  // save the old position of source node
+  var nodeSource = {x: xPosition(source), y: yPosition(source)};
+  var nodeBezier = {x: source.x, y: source.y};
 
   var n = tree(treeData);
   var l = tree.links(n);
 
-  var nodeSource = {x: xPosition(d), y: yPosition(d)};
+
   // use this diagonal to collapse the line
   var enterDiagonal = d3.svg.diagonal()
       .projection(projectionFunc)
-      .source(nodeSource)
-      .target(nodeSource);
-
-
-  var lines = svg.selectAll("path").data(l, function(d){return d.target.id;});
-  var circles = svg.selectAll("circle").data(n, nodeKeyFunc);
-
-  // add new links
-  lines.enter()
-    .append("path")
-    .attr("d", enterDiagonal)
-    .transition()
-    .duration(500)
-    .attr({
-      d: diagonal,
-      class: "edge"
-    });
-
-  // update links
-  lines.transition()
-    .duration(500)
-    .attr({
-      d: diagonal,
-      class: "edge"
-    });
+      .source({x: bezierXSource(nodeBezier), y: bezierYSource(nodeBezier)})
+      .target({x: bezierXSource(nodeBezier), y: bezierYSource(nodeBezier)});
 
   // add new nodes
-  circles.enter()
-    .append("circle")
-    .attr("r", 0.001)
-    .transition()
-    .duration(500)
-    .attr({
-      cx: xPosition,
-      cy: yPosition,
-      r: nodeRadius,
-      class: "node"
-    })
+  var node = svg.selectAll("g")
+      .data(n, nodeKeyFunc);
 
-  circles.transition()
-    .duration(500)
-    .attr({
-      cx: xPosition,
-      cy: yPosition,
-      r: nodeRadius,
-      class: "node"
+  var nodeEnter = node.enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", function(d){
+        return "translate(" + nodeSource.x + "," + nodeSource.y + ")";
+      })
+      .on("click", clickFunc);
+
+  nodeEnter.append("circle")
+    .attr("r", nodeRadius)
+
+  node.transition()
+    .duration(duration)
+    .attr("transform", function(d){
+      return "translate(" + xPosition(d) + "," + yPosition(d) + ")";
     });
 
-  circles.on("click", clickFunc);
+  // add new links
+  var link = svg.selectAll("path").data(l, pathKeyFunc);
+
+  link.enter()
+    .append("path")
+    .attr("d", enterDiagonal)
+    .attr("class", "edge");
+
+  link.transition()
+    .duration(duration)
+    .attr("d", diagonal);
 
 
 }
