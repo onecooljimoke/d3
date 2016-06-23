@@ -11,9 +11,10 @@ var svgWidth = 1200,
     nodeRadius = 10,
     labelWidth = 100,
     labelHeight = 20,
-    labelY = 5,
+    labelYPos = 5,
+    // labelXPos defined later as function labelXPosFunc
     i = 0,
-    duration = 500;
+    duration = 500; // duration of transitions
 
 var treeCache = {
   "B": [
@@ -104,6 +105,13 @@ function circleClassFunc(d) {
   return d.type;
 }
 
+function labelXPosFunc(d) {
+  return (- labelWidth / 2);
+}
+
+function labelTextFunc(d) {
+  return "<p class='label'>" + d.name + "</p>";
+}
 
 // Scales
 // default tree layout computes x and y values on scale of 0 to 1
@@ -258,11 +266,14 @@ function expandNode(source) {
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
     .attr("class", circleClassFunc);
-
-  nodeEnter.append("text")
-    .attr("y", labelY)
-    .text(function(d) {return d.name;});
-
+  
+  nodeEnter.append("foreignObject")
+    .attr("width", labelWidth)
+    .attr("height", labelHeight)
+    .attr("y", labelYPos)
+    .attr("x", labelXPosFunc)
+    .append("xhtml:body")
+    .html(labelTextFunc);
 
   node.transition()
     .duration(duration)
@@ -301,26 +312,18 @@ function activate() {
       .attr("transform", function(d){return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
       .on("click", clickFunc);
 
-
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
     .attr("class", circleClassFunc);
 
-  //  nodeEnter.append("text")
-  //    .attr("y", labelY)
-  //    .text(function(d) {return d.name;});
-
+  // add labels
   nodeEnter.append("foreignObject")
     .attr("width", labelWidth)
     .attr("height", labelHeight)
-    .attr("y", labelY)
-    .attr("x", function(d) {
-      return (- labelWidth / 2);
-    })
+    .attr("y", labelYPos)
+    .attr("x", labelXPosFunc)
     .append("xhtml:body")
-    .html(function(d) {
-      return "<p class='label'>" + d.name + "</p>";
-    });
+    .html(labelTextFunc);
 
 
   // draw the links
