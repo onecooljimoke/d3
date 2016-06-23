@@ -17,3 +17,8 @@
 .hide {
     display: none;
 }
+
+.node text{
+    font: 10px sans-serif;
+    text-anchor: middle;
+}

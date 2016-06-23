@@ -12,37 +12,30 @@ var svgWidth = 1200,
     i = 0,
     duration = 500;
 
-var treeCache = {};
+var treeCache = {
+  "B": [
+    {"name": "D"},
+    {"name": "E"}
+  ],
+  "C": [
+    {"name": "F"},
+    {"name": "G"}
+  ],
+  "D": [
+    {"name": "H"}
+  ],
+  "H": [
+    {"name": "I"},
+    {"name": "J"}
+  ]
+};
 
 // Our fake dataset
 var treeData = {
   "name": "A",
   "children": [
-    {
-      "name": "B",
-      "children": [
-        {
-          "name": "D",
-          "children": [
-            {
-              "name": "H",
-              "children": [
-                {"name": "I"},
-                {"name": "J"}
-              ]
-            }
-          ]
-        },
-        {"name": "E"}
-      ]
-    },
-    {
-      "name": "C",
-      "children": [
-        {"name": "F"},
-        {"name": "G"}
-      ]
-    }
+    {"name": "B"},
+    {"name": "C"}
   ]
 };
 
@@ -151,11 +144,11 @@ function collapseNode(source) {
   source.children = null;
 
   // calling tree updates the x,y values of all nodes
-  // this actually changes the x.y values of source
+  // this actually changes the x,y values of source
   var n = tree(treeData);
   var l = tree.links(n);
 
-  // save the new position of the source 
+  // save the new position of the source
   var nodeSource = {x: xPosition(source), y: yPosition(source)};
 
   // use this diagonal to collapse the line
@@ -239,6 +232,11 @@ function expandNode(source) {
 
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
+  
+  nodeEnter.append("text")
+    .attr("y", 40)
+    .text(function(d) {return d.name;});
+
 
   node.transition()
     .duration(duration)
@@ -266,7 +264,7 @@ function activate() {
   var nodes = tree(treeData);
   var links = tree.links(nodes);
 
-  // draw the edges
+  // draw the nodes 
 
   var node = svg.selectAll("g.node")
       .data(nodes, nodeKeyFunc);
@@ -280,6 +278,10 @@ function activate() {
 
   nodeEnter.append("circle")
     .attr("r", nodeRadius);
+  
+  nodeEnter.append("text")
+    .attr("y", 40)
+    .text(function(d) {return d.name;});
 
   // draw the links
   svg.selectAll("path")
