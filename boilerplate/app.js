@@ -42,7 +42,7 @@ var treeCache = {
     {"name": "O", "type": "test"},
   ],
   "J": [
-    {"name": "P", "type": "test"},
+    {"name": "Big long supercalifragilistic title", "type": "test"},
   ],
 
 };
@@ -307,6 +307,15 @@ function activate() {
   nodeEnter.append("text")
     .attr("y", labelY)
     .text(function(d) {return d.name;});
+
+nodeEnter.append("foreignObject")
+    .attr("width", 100)
+    .attr("height", 20)
+    .attr("y", labelY)
+  .append("xhtml:body")
+    .style("font", "10px 'Helvetica Neue'")
+    .html("<p>Hello I'm falling off the screen</p>");
+
 
   // draw the links
   svg.selectAll("path")
