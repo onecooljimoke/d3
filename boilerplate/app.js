@@ -45,9 +45,34 @@ var treeData = {
   ]
 };
 
+/** Initialize screen at start **/
+// Add svg to the screen
+var svg = d3.select("#display")
+    .append("svg")
+    .attr({
+      width: svgWidth,
+      height: svgHeight
+    });
+
+// Build a tree
+var tree = d3.layout.tree(treeData);
+
+// the diagonal projection function interprets the x and y coordinates
+// need to use a custom projection function so the path's render correctly
+var diagonal = d3.svg.diagonal()
+    .projection(projectionFunc)
+    .source(sourceFunc)
+    .target(targetFunc);
+
+
+
 // define a key function
-function keyFunc(d) {
+function nodeKeyFunc(d) {
   return d.id || (d.id = ++i);
+}
+
+function pathKeyFunc(d) {
+  return d.target.id;
 }
 
 function clickFunc(d) {
@@ -85,6 +110,10 @@ function yPosition(d, i) {
   return yScale(d.x);
 }
 
+// bezier functions return a value between 0 and 1
+// which corresponds to the x and y positions calculated by 
+// the tree layout
+// these functions used for calculating the paths
 function bezierXSource(d){
   return d.x;
 }
@@ -108,7 +137,6 @@ function projectionFunc(d) {
 }
 
 function sourceFunc(d) {
-  console.log(d);
   return {x: bezierXSource(d.source), y: bezierYSource(d.source)};
 }
 
@@ -122,14 +150,17 @@ function collapseNode(source) {
   source.children = null;
   var n = tree(treeData);
   var l = tree.links(n);
+  
+  // save current position of source node
   var nodeSource = {x: xPosition(source), y: yPosition(source)};
+
   // use this diagonal to collapse the line
   var exitDiagonal = d3.svg.diagonal()
       .projection(projectionFunc)
-      .source(nodeSource)
-      .target(nodeSource);
+      .source({x: bezierXSource(source), y: bezierYSource(source)})
+      .target({x: bezierXSource(source), y: bezierYSource(source)});
 
-  var lines = svg.selectAll("path").data(l);
+  var lines = svg.selectAll("path").data(l, pathKeyFunc);
 
   // update links
   lines.exit()
@@ -150,21 +181,21 @@ function collapseNode(source) {
 
   // update nodes
   var node = svg.selectAll("g")
-      .data(n, keyFunc);
-  
+      .data(n, nodeKeyFunc);
+
   var nodeExit = node.exit()
       .transition()
       .duration(500)
       .attr("transform",  "translate(" + nodeSource.x + "," + nodeSource.y + ")")
-      .remove(); 
+      .remove();
 
   nodeExit.selectAll("circle")
-     .attr("r", 0.001);
+    .attr("r", 0.001);
 
   node.transition()
     .duration(500)
     .attr("transform", function(d) {return "translate(" + xPosition(d) + "," + yPosition(d) + ")";})
-  
+
   node.selectAll("circle")
     .attr("r", nodeRadius);
 }
@@ -188,7 +219,7 @@ function expandNode(d) {
 
 
   var lines = svg.selectAll("path").data(l, function(d){return d.target.id;});
-  var circles = svg.selectAll("circle").data(n, keyFunc);
+  var circles = svg.selectAll("circle").data(n, nodeKeyFunc);
 
   // add new links
   lines.enter()
@@ -236,35 +267,15 @@ function expandNode(d) {
 
 }
 
-/** Initialize screen at start **/
-// Add svg to the screen
-var svg = d3.select("#display")
-    .append("svg")
-    .attr({
-      width: svgWidth,
-      height: svgHeight
-    });
-
-// Build a tree
-var tree = d3.layout.tree(treeData);
-var nodes = tree(treeData);
-var links = tree.links(nodes);
-
-// draw the edges
-// **note** I drew the edges first so the ends hide under the nodes
-// this is, I'm sure, kind of suspect, but it works for now
-
-// the diagonal projection function interprets the x and y coordinates
-// need to use a custom projection function so the path's render correctly
-var diagonal = d3.svg.diagonal()
-    .projection(projectionFunc)
-    .source(sourceFunc)
-    .target(targetFunc);
-
 // draw the nodes
 function activate() {
+  var nodes = tree(treeData);
+  var links = tree.links(nodes);
+
+  // draw the edges
+
   var node = svg.selectAll("g.node")
-      .data(nodes, keyFunc);
+      .data(nodes, nodeKeyFunc);
 
   var nodeEnter = node.enter()
       .append("g")
@@ -278,7 +289,7 @@ function activate() {
 
   // draw the links
   svg.selectAll("path")
-    .data(links, function(d) {return d.target.id;})
+    .data(links, pathKeyFunc)
     .enter()
     .append("path")
     .attr({
