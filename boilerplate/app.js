@@ -1,7 +1,7 @@
 // Data
 
 var svgWidth = 1200,
-    svgHeight = 600,
+    svgHeight = 400,
     margin = {
       left: 80,
       right: 40,
@@ -99,6 +99,30 @@ function clickFunc(d) {
       expandNode(d);
     }
   }
+  
+  showDetail(d);
+}
+
+function showDetail(source) {
+  var detailId = "#" + source.type + "Detail";
+  var div = d3.select(detailId);
+  var detail = div.selectAll("div")
+      .data([source]);
+
+//  detail.exit()
+//    .remove();
+
+
+  detail.enter()
+    .append("div")
+    .html(function(d) {
+      return "<h3>" + source.name + "</h3>" + "<p>Description: " + source.type + "</p>";
+    });
+ 
+  detail.html(function(d) {
+      return "<h3>" + source.name + "</h3>" + "<p>Description: " + source.type + "</p>";
+    });
+
 }
 
 function circleClassFunc(d) {
@@ -266,7 +290,7 @@ function expandNode(source) {
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
     .attr("class", circleClassFunc);
-  
+
   nodeEnter.append("foreignObject")
     .attr("width", labelWidth)
     .attr("height", labelHeight)

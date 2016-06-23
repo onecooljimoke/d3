@@ -42,3 +42,16 @@ p.label {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+#dashboard {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    margin-left: 80px;
+    margin-right: 240px;
+}
+
+#dashboard div{
+    width: 30%;
+}
